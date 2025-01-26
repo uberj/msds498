@@ -1,0 +1,12 @@
+numpy
+pandas
+scikit-learn==1.5.2 # https://stackoverflow.com/questions/79290968/super-object-has-no-attribute-sklearn-tags
+matplotlib
+seaborn
+scipy
+xgboost
+lightgbm
+streamlit
+jupyter
+plotly
+mlflow
