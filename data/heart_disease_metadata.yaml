@@ -4,21 +4,21 @@ age:
   min: 28.0
   missing_allowed: false
   title: Age
-  type: numeric
+  type: integer
 ca:
   description: Number of major vessels (0-3) colored by fluoroscopy
   max: 3.0
   min: 0.0
   missing_allowed: true
   title: Number of Major Vessels
-  type: numeric
+  type: integer
 chol:
   description: Serum cholesterol in mg/dl
   max: 603.0
   min: 0.0
   missing_allowed: true
   title: Serum Cholesterol
-  type: numeric
+  type: integer
 cp:
   description: Chest pain type
   missing_allowed: false
@@ -55,14 +55,14 @@ id:
   min: 1.0
   missing_allowed: false
   title: id
-  type: numeric
+  type: integer
 oldpeak:
   description: ST depression induced by exercise relative to rest
   max: 6.2
   min: -2.6
   missing_allowed: true
   title: ST Depression
-  type: numeric
+  type: float
 restecg:
   description: Resting electrocardiographic results
   missing_allowed: true
@@ -104,11 +104,11 @@ thalch:
   min: 60.0
   missing_allowed: true
   title: Max Heart Rate Achieved
-  type: numeric
+  type: integer
 trestbps:
   description: Resting blood pressure (in mm Hg)
   max: 200.0
   min: 0.0
   missing_allowed: true
   title: Resting Blood Pressure
-  type: numeric
+  type: integer

@@ -1,4 +1,5 @@
 import streamlit as st
+from input_ui import draw_inputs
 import pdb
 import pandas as pd
 import numpy as np
@@ -6,6 +7,9 @@ import mlflow.pyfunc
 import yaml
 import logging  # Import the logging module
 from tooltip_utils import generate_tooltip_html  # Import the new function
+import shap  # Import SHAP
+import plotly.express as px  # Import Plotly Express for plotting
+import matplotlib.pyplot as plt  # Import Matplotlib for creating figures
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -49,116 +53,47 @@ except Exception as e:
     st.error(f"An error occurred while loading the YAML file: {e}")
     raise e
 
-# Filter out the 'id' column from metadata
-filtered_metadata = {col: col_metadata for col, col_metadata in metadata.items() if col != 'id'}
-boolean_cols = [col for col, col_metadata in filtered_metadata.items() if col_metadata['type'] == 'boolean']    
+def analyze_prediction(pipeline, input_data, metadata):
+    # Convert input data to DataFrame
+    input_df = pd.DataFrame(input_data)
 
-# Initialize session state with default values if not already set
-for col in input_schema:
-    if col.name not in st.session_state:
-        # Set default values based on the type of input
-        if col.type == 'float' or col.type == 'int':
-            st.session_state[col.name] = 0  # or any other default numeric value
-        elif col.type == 'str':
-            st.session_state[col.name] = ''  # default empty string for text inputs
-        elif col.name in boolean_cols:  # Check if the column is a boolean
-            st.session_state[col.name] = False  # Default to False for boolean inputs
-        else:
-            st.session_state[col.name] = None  # or any other appropriate default
+    # Extract the preprocessing steps from the pipeline
+    # Assuming 'classifier' is the last step in the pipeline
+    preprocessing_pipeline = pipeline[:-1]  # Exclude the last step (classifier)
 
-# Add a button to populate the form with sample data
-if st.button('Use Sample Data'):
-    try:
-        sample_data = model.input_example.sample(1).iloc[0].to_dict()
-        for col, col_metadata in filtered_metadata.items():
-            value = sample_data.get(col, None)
-            if value is not None:
-                if col_metadata['type'] == 'numeric':
-                    st.session_state[col] = float(value)
-                elif col_metadata['type'] == 'categorical':
-                    st.session_state[col] = value
-                elif col_metadata['type'] == 'boolean':
-                    st.session_state[col] = bool(value)
-        logging.info("Sample data loaded into session state.")
-    except Exception as e:
-        logging.error(f"Error loading sample data: {e}")
-        st.error("Failed to load sample data.")
-        raise e
+    # Transform the input data using the preprocessing steps
+    preprocessed_input = preprocessing_pipeline.transform(input_df)
 
-# Initialize inputs dictionary
-inputs = {}
+    # Extract the XGBoost model from the pipeline
+    xgboost_model = pipeline.named_steps['classifier']
 
-# Group inputs by type
-numeric_cols = [col for col, col_metadata in filtered_metadata.items() if col_metadata['type'] == 'numeric']
-categorical_cols = [col for col, col_metadata in filtered_metadata.items() if col_metadata['type'] == 'categorical']
-boolean_cols = [col for col, col_metadata in filtered_metadata.items() if col_metadata['type'] == 'boolean']
+    # Initialize the SHAP TreeExplainer for the XGBoost model
+    explainer = shap.TreeExplainer(xgboost_model)
 
-# Display numeric inputs
-num_cols = st.columns(3)  # Adjust the number of columns as needed
-for i, col in enumerate(numeric_cols):
-    col_metadata = filtered_metadata[col]
-    with num_cols[i % 3]:  # Cycle through columns
-        try:
-            inputs[col] = st.number_input(
-                col_metadata['title'],
-                min_value=col_metadata['min'],
-                max_value=col_metadata['max'],
-                value=st.session_state[col],  # Use session state value
-                key=col,
-                help=col_metadata['description']  # Use the help parameter for tooltips
-            )
-            logging.debug(f"Number input for {col} set with value {st.session_state[col]}.")
-        except Exception as e:
-            logging.error(f"Error setting number input for {col}: {e}")
-            st.error(f"Error setting number input for {col}.")
-            raise e
+    # Compute SHAP values
+    shap_values = explainer(preprocessed_input)
 
-# Display categorical inputs
-cat_cols = st.columns(3)  # Adjust the number of columns as needed
-for i, col in enumerate(categorical_cols):
-    col_metadata = filtered_metadata[col]
-    with cat_cols[i % 3]:  # Cycle through columns
-        try:
-            inputs[col] = st.selectbox(
-                col_metadata['title'],
-                options=col_metadata['values'],
-                index=col_metadata['values'].index(st.session_state[col]) if st.session_state[col] in col_metadata['values'] else 0,
-                key=col,
-                help=col_metadata['description']  # Use the help parameter for tooltips
-            )
-            logging.debug(f"Selectbox for {col} set with value {st.session_state[col]}.")
-        except Exception as e:
-            logging.error(f"Error setting selectbox for {col}: {e}")
-            st.error(f"Error setting selectbox for {col}.")
-            raise e
+    # Map column names to titles from metadata
+    feature_names = input_df.columns
+    feature_titles = [metadata[col]['title'] if col in metadata and 'title' in metadata[col] else col for col in feature_names]
 
-# Display boolean inputs
-bool_cols = st.columns(3)  # Adjust the number of columns as needed
-for i, col in enumerate(boolean_cols):
-    col_metadata = filtered_metadata[col]
-    with bool_cols[i % 3]:  # Cycle through columns
-        try:
-            inputs[col] = st.checkbox(
-                col_metadata['title'],
-                value=st.session_state[col],  # Use session state or default to False
-                key=col,
-                help=col_metadata['description']  # Use the help parameter for tooltips
-            )
-            logging.debug(f"Checkbox for {col} set with value {st.session_state[col]}.")
-        except Exception as e:
-            logging.error(f"Error setting checkbox for {col}: {e}")
-            st.error(f"Error setting checkbox for {col}.")
-            raise e
+    # Update the feature names in the SHAP values
+    shap_values.feature_names = feature_titles
 
-# Validate inputs
-valid_inputs = True
-for col, col_metadata in filtered_metadata.items():
-    if inputs[col] is None and not col_metadata.get('missing_allowed', False):
-        valid_inputs = False
-        logging.warning(f"Input for {col} is None and missing is not allowed.")
-        break
-    # Add more validation logic as needed for other types
+    # Draw the SHAP waterfall plot
+    st.subheader("SHAP Waterfall Plot")
+    fig, ax = plt.subplots()
+    shap.plots.waterfall(shap_values[0], show=False)
+    st.pyplot(fig)
 
+def get_color_from_probability(probability):
+    # Interpolate between green (0, 255, 0) and red (255, 0, 0)
+    red = int(255 * probability)
+    green = int(255 * (1 - probability))
+    blue = 0
+    return f"#{red:02x}{green:02x}{blue:02x}"
+
+inputs, valid_inputs = draw_inputs(metadata, input_schema, model)
 if valid_inputs:
     try:
         # Prepare the input data for the model
@@ -170,9 +105,24 @@ if valid_inputs:
         # Run the model and get the prediction probabilities
         prediction_proba = pipeline.predict_proba(input_df)
 
-        # Display the prediction probabilities
-        st.write("Model Prediction Probabilities:", prediction_proba)
+        # Extract the positive class probability
+        positive_class_proba = prediction_proba[0][1]  # Assuming binary classification
+
+        # Convert to percentage
+        positive_class_percentage = positive_class_proba * 100
+
+        # Determine color based on probability
+        color = get_color_from_probability(positive_class_proba)
+
+        # Display the prediction probability for the positive class
+        st.markdown(
+            f"<div style='text-align: center; color: {color}; font-size: 24px;'>"
+            f"Probability of Heart Disease: {positive_class_percentage:.2f}%"
+            f"</div>",
+            unsafe_allow_html=True
+        )
         logging.info("Prediction probabilities displayed successfully.")
+        analyze_prediction(pipeline, input_data, metadata)
     except Exception as e:
         logging.error(f"Error during prediction: {e}")
         st.error("Failed to generate prediction.")

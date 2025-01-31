@@ -44,8 +44,13 @@ def save_metadata_to_yaml(data, file_path):
                 'missing_allowed': is_missing_allowed
             }
         elif pd.api.types.is_numeric_dtype(data[col]):
+            # Check if all values are integers
+            if (data[col].dropna() % 1 == 0).all():
+                data_type = 'integer'
+            else:
+                data_type = 'float'
             metadata[col] = {
-                'type': 'numeric',
+                'type': data_type,
                 'min': float(data[col].min()),
                 'max': float(data[col].max()),
                 'title': title,
