@@ -10,3 +10,4 @@ streamlit
 jupyter
 plotly
 mlflow
+watchdog

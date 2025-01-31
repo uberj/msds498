@@ -1,0 +1,114 @@
+age:
+  description: Age of the patient
+  max: 77.0
+  min: 28.0
+  missing_allowed: false
+  title: Age
+  type: numeric
+ca:
+  description: Number of major vessels (0-3) colored by fluoroscopy
+  max: 3.0
+  min: 0.0
+  missing_allowed: true
+  title: Number of Major Vessels
+  type: numeric
+chol:
+  description: Serum cholesterol in mg/dl
+  max: 603.0
+  min: 0.0
+  missing_allowed: true
+  title: Serum Cholesterol
+  type: numeric
+cp:
+  description: Chest pain type
+  missing_allowed: false
+  title: Chest Pain Type
+  type: categorical
+  values:
+  - typical angina
+  - asymptomatic
+  - non-anginal
+  - atypical angina
+dataset:
+  description: No description available
+  missing_allowed: false
+  title: Hospital
+  type: categorical
+  values:
+  - Cleveland
+  - Hungary
+  - Switzerland
+  - VA Long Beach
+exang:
+  description: Exercise induced angina (True/False)
+  missing_allowed: true
+  title: Exercise Induced Angina
+  type: boolean
+fbs:
+  description: Fasting blood sugar > 120 mg/dl (True/False)
+  missing_allowed: true
+  title: Fasting Blood Sugar
+  type: boolean
+id:
+  description: No description available
+  max: 920.0
+  min: 1.0
+  missing_allowed: false
+  title: id
+  type: numeric
+oldpeak:
+  description: ST depression induced by exercise relative to rest
+  max: 6.2
+  min: -2.6
+  missing_allowed: true
+  title: ST Depression
+  type: numeric
+restecg:
+  description: Resting electrocardiographic results
+  missing_allowed: true
+  title: Resting ECG Results
+  type: categorical
+  values:
+  - lv hypertrophy
+  - normal
+  - st-t abnormality
+sex:
+  description: Sex of the patient (Male/Female)
+  missing_allowed: false
+  title: Sex
+  type: categorical
+  values:
+  - Male
+  - Female
+slope:
+  description: Slope of the peak exercise ST segment
+  missing_allowed: true
+  title: Slope of ST Segment
+  type: categorical
+  values:
+  - downsloping
+  - flat
+  - upsloping
+thal:
+  description: Thalassemia (normal, fixed defect, reversible defect)
+  missing_allowed: true
+  title: Thalassemia
+  type: categorical
+  values:
+  - fixed defect
+  - normal
+  - reversable defect
+thalch:
+  description: Maximum heart rate achieved
+  max: 202.0
+  min: 60.0
+  missing_allowed: true
+  title: Max Heart Rate Achieved
+  type: numeric
+trestbps:
+  description: Resting blood pressure (in mm Hg)
+  max: 200.0
+  min: 0.0
+  missing_allowed: true
+  title: Resting Blood Pressure
+  type: numeric
