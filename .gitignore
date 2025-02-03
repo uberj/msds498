@@ -3,3 +3,4 @@ old/
 mlruns
 __pycache__
 .secrets
+.streamlit/secrets.toml

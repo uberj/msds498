@@ -6,25 +6,9 @@ import mlflow.pyfunc
 import yaml
 
 
-def explain_prediction_with_llm(model, input_data, metadata, api_key) -> str:
+def explain_prediction_with_llm(input_data, shap_values, metadata, api_key, system, positive_class_proba) -> str:
     # Convert input data to DataFrame
     input_df = pd.DataFrame([input_data])
-
-    # Extract the preprocessing steps from the pipeline
-    # Assuming 'classifier' is the last step in the pipeline
-    preprocessing_pipeline = model[:-1]  # Exclude the last step (classifier)
-
-    # Transform the input data using the preprocessing steps
-    preprocessed_input = preprocessing_pipeline.transform(input_df)
-
-    # Extract the XGBoost model from the pipeline
-    xgboost_model = model.named_steps["classifier"]
-
-    # Initialize the SHAP TreeExplainer for the XGBoost model
-    explainer = shap.TreeExplainer(xgboost_model)
-
-    # Compute SHAP values
-    shap_values = explainer(preprocessed_input)
 
     # Map column names to titles from metadata
     feature_names = input_df.columns
@@ -43,8 +27,7 @@ def explain_prediction_with_llm(model, input_data, metadata, api_key) -> str:
         )
         prompt += f"- {title}: {value}\n"
 
-    probability = model.predict_proba(input_df)[0][1]
-    prompt += f"\nThe model predicts a probability of heart disease of {probability}. \nThe SHAP values for each feature are:\n"
+    prompt += f"\nThe model predicts a probability of heart disease of {round(positive_class_proba, 3)}. \nThe SHAP values for each feature are:\n"
     for feature, shap_value in zip(feature_titles, shap_values[0].values):
         prompt += f"- {feature}: {shap_value:.4f}\n"
 
@@ -57,7 +40,7 @@ def explain_prediction_with_llm(model, input_data, metadata, api_key) -> str:
     response = client.messages.create(
         model="claude-3-5-sonnet-20241022",
         max_tokens=300,
-        system="You are a world-class heart specialist. Respond only with short explainations of the prediction of hearth disease for a patient with the given features.",
+        system=system,
         messages=[
             {
                 "role": "user",
@@ -84,15 +67,40 @@ if __name__ == "__main__":
         metadata = yaml.safe_load(f)
 
     example_input = model.input_example.sample(1).iloc[0].to_dict()
+    preprocessing_pipeline = pipeline[:-1]  # Exclude the last step (classifier)
+
+    # Transform the input data using the preprocessing steps
+    preprocessed_input = preprocessing_pipeline.transform(pd.DataFrame([example_input]))
+
+    # Extract the XGBoost model from the pipeline
+    xgboost_model = pipeline.named_steps["classifier"]
+
+    # Initialize the SHAP TreeExplainer for the XGBoost model
+    explainer = shap.TreeExplainer(xgboost_model)
+
+    # Compute SHAP values
+    shap_values = explainer(preprocessed_input)
     # Load the API key from the .secrets file
-    with open(".secrets", "r") as f:
+    with open(".streamlit/secrets.toml", "r") as f:
         for line in f:
             if line.startswith("ANTHROPIC_API_KEY"):
-                api_key = line.strip().split("=")[1]
+                api_key = line.strip().split("=")[1].strip('"')
 
+    # Define the system parameter
+    system = """
+You are a world-class heart specialist. 
+Respond only with short explanations of the prediction of heart disease 
+for a patient with the given features. Give recommendations for how the patient can improve their heart health.
+"""
+
+    # Run the model and get the prediction probabilities
+    prediction_proba = pipeline.predict_proba(pd.DataFrame([example_input]))
+
+    # Extract the positive class probability
+    positive_class_proba = prediction_proba[0][1]  # Assuming binary classification
     # Get explanation
     prompt, explanation = explain_prediction_with_llm(
-        pipeline, example_input, metadata, api_key
+        example_input, shap_values, metadata, api_key, system, positive_class_proba
     )
     print("Prompt:\n", prompt)
     print("Explanation:\n", explanation.text)
