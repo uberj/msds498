@@ -6,7 +6,7 @@ flavors:
     loader_module: mlflow.sklearn
     model_path: model.pkl
     predict_fn: predict
-    python_version: 3.11.11
+    python_version: 3.12.8
   sklearn:
     code: null
     pickled_model: model.pkl
@@ -14,8 +14,8 @@ flavors:
     sklearn_version: 1.5.2
 is_signature_from_type_hint: false
 mlflow_version: 2.20.0
-model_size_bytes: 249526
-model_uuid: 78a0bf0bcadb47589d1f70d4e0215a8c
+model_size_bytes: 279505
+model_uuid: d8cb81009ac74645af1d1ded784445ea
 saved_input_example_info:
   artifact_path: input_example.json
   pandas_orient: split
@@ -35,4 +35,4 @@ signature:
   outputs: '[{"type": "long", "required": true}]'
   params: null
 type_hint_from_example: false
-utc_time_created: '2025-01-26 01:49:02.162095'
+utc_time_created: '2025-02-02 23:47:43.821415'

@@ -10,9 +10,12 @@ from tooltip_utils import generate_tooltip_html  # Import the new function
 import shap  # Import SHAP
 import plotly.express as px  # Import Plotly Express for plotting
 import matplotlib.pyplot as plt  # Import Matplotlib for creating figures
+import streamlit.components.v1 as components  # Import Streamlit components
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # Set the page layout to wide
 st.set_page_config(layout="wide")
@@ -41,7 +44,7 @@ st.title("ML Model Prediction Dashboard")
 
 # Load the metadata from YAML
 try:
-    with open('data/heart_disease_metadata.yaml', 'r') as f:
+    with open("data/heart_disease_metadata.yaml", "r") as f:
         metadata = yaml.safe_load(f)
     logging.info("Metadata loaded successfully.")
 except FileNotFoundError as e:
@@ -52,6 +55,10 @@ except Exception as e:
     logging.error(f"An error occurred while loading the YAML file: {e}")
     st.error(f"An error occurred while loading the YAML file: {e}")
     raise e
+
+# Initialize SHAP JavaScript
+shap.initjs()
+
 
 def analyze_prediction(pipeline, input_data, metadata):
     # Convert input data to DataFrame
@@ -65,7 +72,7 @@ def analyze_prediction(pipeline, input_data, metadata):
     preprocessed_input = preprocessing_pipeline.transform(input_df)
 
     # Extract the XGBoost model from the pipeline
-    xgboost_model = pipeline.named_steps['classifier']
+    xgboost_model = pipeline.named_steps["classifier"]
 
     # Initialize the SHAP TreeExplainer for the XGBoost model
     explainer = shap.TreeExplainer(xgboost_model)
@@ -75,16 +82,36 @@ def analyze_prediction(pipeline, input_data, metadata):
 
     # Map column names to titles from metadata
     feature_names = input_df.columns
-    feature_titles = [metadata[col]['title'] if col in metadata and 'title' in metadata[col] else col for col in feature_names]
+    feature_titles = [
+        metadata[col]["title"] if col in metadata and "title" in metadata[col] else col
+        for col in feature_names
+    ]
 
     # Update the feature names in the SHAP values
     shap_values.feature_names = feature_titles
 
+    # Render the SHAP force plot
+    st.subheader("Risk factor contributions")
+    force_plot_html = shap.force_plot(
+        explainer.expected_value,
+        shap_values[0, :].values,
+        preprocessed_input.iloc[0, :],
+        matplotlib=False,
+        feature_names=feature_titles,
+        link="logit",
+    )
+    # Convert the force plot to an HTML string
+    force_plot_html = (
+        f"<head>{shap.getjs()}</head><body>{force_plot_html.html()}</body>"
+    )
+    components.html(force_plot_html)
+
     # Draw the SHAP waterfall plot
-    st.subheader("SHAP Waterfall Plot")
+    st.subheader("Risk factor contributions")
     fig, ax = plt.subplots()
     shap.plots.waterfall(shap_values[0], show=False)
     st.pyplot(fig)
+
 
 def get_color_from_probability(probability):
     # Interpolate between green (0, 255, 0) and red (255, 0, 0)
@@ -93,8 +120,9 @@ def get_color_from_probability(probability):
     blue = 0
     return f"#{red:02x}{green:02x}{blue:02x}"
 
-inputs, valid_inputs = draw_inputs(metadata, input_schema, model)
-if valid_inputs:
+
+inputs, missing_inputs = draw_inputs(metadata, input_schema, model)
+if len(missing_inputs) == 0:
     try:
         # Prepare the input data for the model
         input_data = {col: [inputs[col]] for col in inputs}
@@ -119,7 +147,7 @@ if valid_inputs:
             f"<div style='text-align: center; color: {color}; font-size: 24px;'>"
             f"Probability of Heart Disease: {positive_class_percentage:.2f}%"
             f"</div>",
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
         logging.info("Prediction probabilities displayed successfully.")
         analyze_prediction(pipeline, input_data, metadata)
@@ -128,5 +156,6 @@ if valid_inputs:
         st.error("Failed to generate prediction.")
         raise e
 else:
-    st.write("Please fill in all required inputs to get a prediction.")
-
+    st.write("Please fill in all required inputs to get a prediction. Missing inputs:")
+    for missing_input in missing_inputs:
+        st.write(f"- {missing_input}")
