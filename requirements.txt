@@ -12,3 +12,4 @@ plotly
 mlflow
 watchdog
 shap
+anthropic

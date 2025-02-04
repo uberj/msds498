@@ -62,6 +62,12 @@ def analyze_prediction(pipeline, input_data, metadata):
                        'thickness': 0.75,
                        'value': positive_class_percentage}}))
 
+        # Update layout to make the indicator 25% smaller
+        fig.update_layout(
+            height=300,  # Adjust the height to 75% of the original
+            width=300    # Adjust the width to 75% of the original
+        )
+
         st.plotly_chart(fig)
 
         logging.info("Prediction probabilities displayed successfully.")
