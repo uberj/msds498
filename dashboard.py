@@ -30,10 +30,13 @@ st.set_page_config(layout="wide")
 
 # Load the model, pipeline, input schema, and metadata
 model, pipeline, input_schema, metadata = load_model()
+
 # Load secrets
 anthropic_api_key = st.secrets["ANTHROPIC_API_KEY"]
-ai_doctor_system_prompt = st.secrets["AI_DOCTOR_SYSTEM_PROMPT"]
 
+# Load the AI doctor system prompt from a text file
+with open("ai_doctor_system_prompt.txt", "r") as file:
+    ai_doctor_system_prompt = file.read()
 
 st.title("Heart Disease Prediction Diagnosis Dashboard")
 
