@@ -27,7 +27,7 @@ def analyze_prediction(pipeline, input_data, metadata):
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=round(positive_class_percentage),
-            title={'text': "Heart Disease Risk"},
+            title={'text': "Heart Disease Risk", 'font': {'size': 44}},
             gauge={'axis': {'range': [0, 100]},
                    'bar': {'color': color},
                    'threshold': {
@@ -35,13 +35,15 @@ def analyze_prediction(pipeline, input_data, metadata):
                        'thickness': 0.75,
                        'value': positive_class_percentage}}))
 
-        # Update layout to make the indicator 25% smaller
+        # Update layout to make the indicator 1/3 the size
         fig.update_layout(
-            height=300,  # Adjust the height to 75% of the original
-            width=300    # Adjust the width to 75% of the original
+            autosize=False,  # Disable autosize to use fixed width and height
         )
 
-        st.plotly_chart(fig)
+        # Create three columns and place the chart in the middle column
+        _, col2, _ = st.columns((0.2, 0.6, 0.2))
+        with col2:
+            st.plotly_chart(fig, use_container_width=True)  # Use container width to help center
 
         logging.info("Prediction probabilities displayed successfully.")
 

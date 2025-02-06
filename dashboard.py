@@ -38,10 +38,12 @@ anthropic_api_key = st.secrets["ANTHROPIC_API_KEY"]
 with open("ai_doctor_system_prompt.txt", "r") as file:
     ai_doctor_system_prompt = file.read()
 
-st.title("Heart Disease Prediction Diagnosis Dashboard")
+st.title("Heart Disease Risk Diagnosis Dashboard")
 
 st.markdown("""
-This is a dashboard for predicting heart disease based on a variety of features. 
+Enter your information to get a risk assessment for heart disease. Our AI doctor will explain the results in a way that is easy to understand.
+
+_Click:_ **Use Sample Data** _to see an example of how the AI doctor would explain the results._
 """)
 
 st.divider()
@@ -94,11 +96,17 @@ with col2:
 # Use the typing effect function to display the explanation
 with col1:
     if data_ready:
-        # Use an expander to make the info collapsible
-        prompt, llm_explanation = explain_prediction_with_llm(
-            input_data, shap_values, metadata, anthropic_api_key, ai_doctor_system_prompt, positive_class_proba
-        )
-        with st.expander("View AI Prompt", expanded=False):
-            st.info(prompt, icon="ℹ️")
-        loading_placeholder.empty()
-        type_out_text(llm_explanation.text, speed=0.05)  # Adjust the speed as needed
+        try:
+            pass
+            # # Use an expander to make the info collapsible
+            # prompt, llm_explanation = explain_prediction_with_llm(
+            #     input_data, shap_values, metadata, anthropic_api_key, ai_doctor_system_prompt, positive_class_proba
+            # )
+            # with st.expander("View AI Prompt", expanded=False):
+            #     st.info(prompt, icon="ℹ️")
+            # loading_placeholder.empty()
+            # type_out_text(llm_explanation.text, speed=0.05)  # Adjust the speed as needed
+        except Exception as e:
+            loading_placeholder.empty()
+            st.error("Sorry, the AI doctor is offline. Please try again later.")
+            logging.error(f"Error in explain_prediction_with_llm: {e}")
