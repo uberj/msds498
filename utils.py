@@ -29,7 +29,7 @@ def analyze_prediction(pipeline, input_data, metadata):
             value=round(positive_class_percentage),
             title={'text': "Heart Disease Risk", 'font': {'size': 44}},
             gauge={'axis': {'range': [0, 100]},
-                   'bar': {'color': color},
+                   'bar': {'color': color, 'thickness': 0.2},
                    'threshold': {
                        'line': {'color': "black", 'width': 4},
                        'thickness': 0.75,
@@ -75,7 +75,6 @@ def analyze_prediction(pipeline, input_data, metadata):
         shap_values.data = input_df.values
 
         # Render the SHAP force plot
-        st.subheader("Risk factor contributions")
         force_plot_html = shap.force_plot(
             explainer.expected_value,
             shap_values[0, :].values,
@@ -94,6 +93,11 @@ def analyze_prediction(pipeline, input_data, metadata):
         st.subheader("Risk factor contributions")
         fig, ax = plt.subplots()
         shap.plots.waterfall(shap_values[0], show=False)
+        st.pyplot(fig)
+
+        st.subheader("Factor Ranks")
+        fig, ax = plt.subplots()
+        shap.plots.bar(shap_values, max_display=12, ax=ax)
         st.pyplot(fig)
     except Exception as e:
         logging.error(f"Error during prediction: {e}")

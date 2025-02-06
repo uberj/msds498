@@ -41,9 +41,11 @@ with open("ai_doctor_system_prompt.txt", "r") as file:
 st.title("Heart Disease Risk Diagnosis Dashboard")
 
 st.markdown("""
-Enter your information to get a risk assessment for heart disease. Our AI doctor will explain the results in a way that is easy to understand.
+_:warning: This is not a real medical diagnosis tool. It is a demo for a proof of concept.:warning:_
 
-_Click:_ **Use Sample Data** _to see an example of how the AI doctor would explain the results._
+Enter a patient's report to get a risk assessment for heart disease. Our AI doctor will explain the results in a way that is easy to understand.
+
+_Click:_ **Use Sample Patient** _to see an example of how the AI doctor would explain the results._
 """)
 
 st.divider()
@@ -81,7 +83,7 @@ input_data = {col: [st.session_state[col]] for col in inputs}
 data_ready = len(missing_inputs) == 0
 with col1:
     if data_ready:
-        st.subheader("AI Explanation ✨")
+        st.subheader("AI Medical Dr. Explanation ✨")
         loading_placeholder = st.empty()
         loading_placeholder.markdown("Loading...")
 
@@ -91,7 +93,10 @@ with col2:
     else:
         st.write("Please fill in all required inputs to get a prediction. Missing inputs:")
         for missing_input in missing_inputs:
-            st.write(f"- {missing_input}")
+            # Look up the title and description in the metadata
+            title = metadata[missing_input].get('title', missing_input)
+            description = metadata[missing_input].get('description', 'No description available.')
+            st.write(f"- **{title}**: {description}")
 
 # Use the typing effect function to display the explanation
 with col1:

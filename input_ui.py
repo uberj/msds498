@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pdb
 import logging
+import streamlit.components.v1 as components
 
 
 def draw_inputs(metadata, input_schema, model):
@@ -33,15 +34,30 @@ def draw_inputs(metadata, input_schema, model):
         if col.name not in st.session_state:
             default_col_value(col)
 
-    # Add a button to populate the form with sample data
-    col1, col2 = st.columns([.2,1])
-    with col1:
-        if st.button("Reset Form"):
-            for col in input_schema:
-                default_col_value(col)
+    # Add custom CSS for button styling
+    components.html(
+        """
+        <style>
+        button:first-child {
+            background: linear-gradient(90deg, rgba(0,0,255,1) 0%, rgba(128,0,128,1) 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .stButton>button:first-child:hover {
+            background: linear-gradient(90deg, rgba(0,0,200,1) 0%, rgba(100,0,100,1) 100%);
+        }
+        </style>
+        """,
+        height=0,
+    )
 
-    with col2:
-        if st.button("Use Sample Data"):
+    # Add a button to populate the form with sample data
+    col1, col2 = st.columns([0.4, 1])
+    with col1:
+        if st.button(":stethoscope: Use Sample Patient"):
             try:
                 sample_data = model.input_example.sample(1).iloc[0].to_dict()
                 for col, col_metadata in filtered_metadata.items():
@@ -63,6 +79,11 @@ def draw_inputs(metadata, input_schema, model):
                 logging.error(f"Error loading sample data: {e}")
                 st.error("Failed to load sample data.")
                 raise e
+
+    with col2:
+        if st.button("Reset"):
+            for col in input_schema:
+                default_col_value(col)
 
     # Initialize inputs dictionary
     inputs = {}
