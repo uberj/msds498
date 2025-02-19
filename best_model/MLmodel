@@ -11,11 +11,11 @@ flavors:
     code: null
     pickled_model: model.pkl
     serialization_format: cloudpickle
-    sklearn_version: 1.5.2
+    sklearn_version: 1.6.1
 is_signature_from_type_hint: false
-mlflow_version: 2.20.0
-model_size_bytes: 279505
-model_uuid: d8cb81009ac74645af1d1ded784445ea
+mlflow_version: 2.20.2
+model_size_bytes: 422937
+model_uuid: c20e84c3cb8c4c3da1fad98f7ac37130
 saved_input_example_info:
   artifact_path: input_example.json
   pandas_orient: split
@@ -32,7 +32,7 @@ signature:
     "name": "oldpeak", "required": false}, {"type": "string", "name": "slope", "required":
     false}, {"type": "double", "name": "ca", "required": false}, {"type": "string",
     "name": "thal", "required": false}]'
-  outputs: '[{"type": "long", "required": true}]'
+  outputs: '[{"type": "long", "name": "label", "required": true}]'
   params: null
 type_hint_from_example: false
-utc_time_created: '2025-02-02 23:47:43.821415'
+utc_time_created: '2025-02-19 20:22:46.951308'

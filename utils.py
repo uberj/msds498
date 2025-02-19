@@ -12,28 +12,25 @@ def analyze_prediction(pipeline, input_data, metadata):
         input_df = pd.DataFrame(input_data)
 
         # Run the model and get the prediction probabilities
-        prediction_proba = pipeline.predict_proba(input_df)
+        risk_prediction = pipeline.predict(input_df)
 
-        # Extract the positive class probability
-        positive_class_proba = prediction_proba[0][1]  # Assuming binary classification
-
-        # Convert to percentage
-        positive_class_percentage = positive_class_proba * 100
+        # Extract the risk prediction
+        risk_prediction = risk_prediction[0]  # Assuming binary classification
 
         # Determine color based on probability
-        color = get_color_from_probability(positive_class_proba)
+        color = get_color_from_probability(risk_prediction/4)
 
         # Create a gauge chart using Plotly
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
-            value=round(positive_class_percentage),
+            value=risk_prediction,
             title={'text': "Heart Disease Risk", 'font': {'size': 44}},
-            gauge={'axis': {'range': [0, 100]},
+            gauge={'axis': {'range': [0, 4]},
                    'bar': {'color': color, 'thickness': 0.2},
                    'threshold': {
                        'line': {'color': "black", 'width': 4},
                        'thickness': 0.75,
-                       'value': positive_class_percentage}}))
+                       'value': risk_prediction}}))
 
         # Update layout to make the indicator 1/3 the size
         fig.update_layout(
@@ -55,7 +52,7 @@ def analyze_prediction(pipeline, input_data, metadata):
         preprocessed_input = preprocessing_pipeline.transform(input_df)
 
         # Extract the XGBoost model from the pipeline
-        xgboost_model = pipeline.named_steps["classifier"]
+        xgboost_model = pipeline.named_steps["regressor"]
 
         # Initialize the SHAP TreeExplainer for the XGBoost model
         explainer = shap.TreeExplainer(xgboost_model)
@@ -103,7 +100,7 @@ def analyze_prediction(pipeline, input_data, metadata):
         logging.error(f"Error during prediction: {e}")
         st.error("Failed to generate prediction.")
         raise e
-    return positive_class_proba, shap_values
+    return risk_prediction, shap_values
 
 
 def get_color_from_probability(probability):

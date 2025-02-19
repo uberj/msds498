@@ -6,7 +6,7 @@ import mlflow.pyfunc
 import yaml
 
 
-def explain_prediction_with_llm(input_data, shap_values, metadata, api_key, system, positive_class_proba) -> str:
+def explain_prediction_with_llm(input_data, shap_values, metadata, api_key, system, risk_prediction) -> str:
     # Convert input data to DataFrame
     input_df = pd.DataFrame([input_data])
 
@@ -27,7 +27,7 @@ def explain_prediction_with_llm(input_data, shap_values, metadata, api_key, syst
         )
         prompt += f"- {title}: {value}\n"
 
-    prompt += f"\nThe model predicts a probability of heart disease of {round(positive_class_proba, 3)}. \nThe SHAP values for each feature are:\n"
+    prompt += f"\nThe model predicts a risk of heart disease of {round(risk_prediction, 3)} (the risk range is 0 to 4, with 4 being the highest risk). \nThe SHAP values for each feature are:\n"
     for feature, shap_value in zip(feature_titles, shap_values[0].values):
         prompt += f"- {feature}: {shap_value:.4f}\n"
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     preprocessed_input = preprocessing_pipeline.transform(pd.DataFrame([example_input]))
 
     # Extract the XGBoost model from the pipeline
-    xgboost_model = pipeline.named_steps["classifier"]
+    xgboost_model = pipeline.named_steps["regressor"]
 
     # Initialize the SHAP TreeExplainer for the XGBoost model
     explainer = shap.TreeExplainer(xgboost_model)
@@ -94,13 +94,11 @@ for a patient with the given features. Give recommendations for how the patient 
 """
 
     # Run the model and get the prediction probabilities
-    prediction_proba = pipeline.predict_proba(pd.DataFrame([example_input]))
+    risk_rating = pipeline.predict(pd.DataFrame([example_input]))[0]
 
-    # Extract the positive class probability
-    positive_class_proba = prediction_proba[0][1]  # Assuming binary classification
     # Get explanation
     prompt, explanation = explain_prediction_with_llm(
-        example_input, shap_values, metadata, api_key, system, positive_class_proba
+        example_input, shap_values, metadata, api_key, system, risk_rating
     )
     print("Prompt:\n", prompt)
     print("Explanation:\n", explanation.text)

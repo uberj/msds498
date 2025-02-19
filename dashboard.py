@@ -89,7 +89,7 @@ with col1:
 
 with col2:
     if data_ready:
-        positive_class_proba, shap_values = analyze_prediction(pipeline, input_data, metadata)
+        risk_prediction, shap_values = analyze_prediction(pipeline, input_data, metadata)
     else:
         st.write("Please fill in all required inputs to get a prediction. Missing inputs:")
         for missing_input in missing_inputs:
@@ -103,14 +103,14 @@ with col1:
     if data_ready:
         try:
             pass
-            # # Use an expander to make the info collapsible
-            # prompt, llm_explanation = explain_prediction_with_llm(
-            #     input_data, shap_values, metadata, anthropic_api_key, ai_doctor_system_prompt, positive_class_proba
-            # )
-            # with st.expander("View AI Prompt", expanded=False):
-            #     st.info(prompt, icon="ℹ️")
-            # loading_placeholder.empty()
-            # type_out_text(llm_explanation.text, speed=0.05)  # Adjust the speed as needed
+            # Use an expander to make the info collapsible
+            prompt, llm_explanation = explain_prediction_with_llm(
+                input_data, shap_values, metadata, anthropic_api_key, ai_doctor_system_prompt, risk_prediction
+            )
+            with st.expander("View AI Prompt", expanded=False):
+                st.info(prompt, icon="ℹ️")
+            loading_placeholder.empty()
+            type_out_text(llm_explanation.text, speed=0.05)  # Adjust the speed as needed
         except Exception as e:
             loading_placeholder.empty()
             st.error("Sorry, the AI doctor is offline. Please try again later.")
