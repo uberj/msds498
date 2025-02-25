@@ -15,7 +15,7 @@ flavors:
 is_signature_from_type_hint: false
 mlflow_version: 2.20.2
 model_size_bytes: 422937
-model_uuid: c20e84c3cb8c4c3da1fad98f7ac37130
+model_uuid: 87080c5e6aa94f84a29bf0cf3a0ab6b7
 saved_input_example_info:
   artifact_path: input_example.json
   pandas_orient: split
@@ -35,4 +35,4 @@ signature:
   outputs: '[{"type": "long", "name": "label", "required": true}]'
   params: null
 type_hint_from_example: false
-utc_time_created: '2025-02-19 20:22:46.951308'
+utc_time_created: '2025-02-25 17:58:07.343783'
