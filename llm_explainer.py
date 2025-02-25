@@ -29,7 +29,7 @@ def explain_prediction_with_llm(input_data, shap_values, metadata, api_key, syst
 
     prompt += f"\nThe model predicts a risk of heart disease of {round(risk_prediction, 3)} (the risk range is 0 to 4, with 4 being the highest risk). \nThe SHAP values for each feature are:\n"
     for feature, shap_value in zip(feature_titles, shap_values[0].values):
-        prompt += f"- {feature}: {shap_value:.4f}\n"
+        prompt += f"- {feature}: {float(shap_value):.4f}\n"
 
     prompt += "\n Please provide a detailed explanation of how these features contribute to the prediction."
 

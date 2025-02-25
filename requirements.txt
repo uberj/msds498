@@ -11,5 +11,6 @@ jupyter
 plotly
 mlflow
 watchdog
-shap
+git+https://github.com/shap/shap.git
 anthropic
+hyperopt

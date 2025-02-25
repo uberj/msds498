@@ -1,4 +1,5 @@
 import streamlit as st
+import pickle
 from input_ui import draw_inputs
 import logging
 from model_loader import load_model
@@ -29,7 +30,7 @@ logging.basicConfig(
 st.set_page_config(layout="wide")
 
 # Load the model, pipeline, input schema, and metadata
-model, pipeline, input_schema, metadata = load_model()
+model, pipeline, input_schema, metadata, test_shap_values = load_model()
 
 # Load secrets
 anthropic_api_key = st.secrets["ANTHROPIC_API_KEY"]
@@ -89,7 +90,7 @@ with col1:
 
 with col2:
     if data_ready:
-        risk_prediction, shap_values = analyze_prediction(pipeline, input_data, metadata)
+        risk_prediction, shap_values = analyze_prediction(pipeline, input_data, metadata, test_shap_values)
     else:
         st.write("Please fill in all required inputs to get a prediction. Missing inputs:")
         for missing_input in missing_inputs:
@@ -105,7 +106,7 @@ with col1:
             pass
             # Use an expander to make the info collapsible
             prompt, llm_explanation = explain_prediction_with_llm(
-                input_data, shap_values, metadata, anthropic_api_key, ai_doctor_system_prompt, risk_prediction
+                input_data, shap_values[:,:,risk_prediction], metadata, anthropic_api_key, ai_doctor_system_prompt, risk_prediction
             )
             with st.expander("View AI Prompt", expanded=False):
                 st.info(prompt, icon="ℹ️")
@@ -113,5 +114,7 @@ with col1:
             type_out_text(llm_explanation.text, speed=0.05)  # Adjust the speed as needed
         except Exception as e:
             loading_placeholder.empty()
+            import traceback
+            print(traceback.format_exc())
             st.error("Sorry, the AI doctor is offline. Please try again later.")
             logging.error(f"Error in explain_prediction_with_llm: {e}")

@@ -1,4 +1,5 @@
 import mlflow.pyfunc
+import pickle
 import yaml
 import logging
 import streamlit as st
@@ -6,7 +7,7 @@ import streamlit as st
 
 @st.cache_resource
 def load_model(
-    model_path="./best_model", metadata_path="data/heart_disease_metadata.yaml"
+    model_path="./best_classification_model", metadata_path="data/heart_disease_metadata.yaml"
 ):
     try:
         model = mlflow.pyfunc.load_model(model_path)
@@ -19,7 +20,8 @@ def load_model(
             metadata = yaml.safe_load(f)
         logging.info("Metadata loaded successfully.")
 
-        return model, pipeline, input_schema, metadata
+        test_shap_values = pickle.load(open('data/test_shap_values.pkl', 'rb'))
+        return model, pipeline, input_schema, metadata, test_shap_values
     except FileNotFoundError as e:
         logging.error("Metadata YAML file not found.")
         st.error("Metadata YAML file not found.")

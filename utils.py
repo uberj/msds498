@@ -7,15 +7,14 @@ import plotly.graph_objects as go
 import pandas as pd
 import time
 
-def analyze_prediction(pipeline, input_data, metadata):
+def analyze_prediction(pipeline, input_data, metadata, test_shap_values):
     try:
         input_df = pd.DataFrame(input_data)
 
         # Run the model and get the prediction probabilities
         risk_prediction = pipeline.predict(input_df)
 
-        # Extract the risk prediction
-        risk_prediction = risk_prediction[0]  # Assuming binary classification
+        risk_prediction = risk_prediction[0]
 
         # Determine color based on probability
         color = get_color_from_probability(risk_prediction/4)
@@ -71,10 +70,17 @@ def analyze_prediction(pipeline, input_data, metadata):
         shap_values.feature_names = feature_titles
         shap_values.data = input_df.values
 
+        class_idx = risk_prediction
+        shap.summary_plot(shap_values[:,:,class_idx], preprocessed_input, 
+                        feature_names=feature_titles,
+                        show=False,
+                        plot_size=None)  # Disable automatic figure creation
+        plt.title(f'SHAP Values for Risk Class {class_idx}')
+
         # Render the SHAP force plot
         force_plot_html = shap.force_plot(
-            explainer.expected_value,
-            shap_values[0, :].values,
+            explainer.expected_value[class_idx],
+            shap_values[0, :, class_idx].values,
             preprocessed_input.iloc[0, :],
             matplotlib=False,
             feature_names=feature_titles,
@@ -86,15 +92,17 @@ def analyze_prediction(pipeline, input_data, metadata):
         )
         components.html(force_plot_html)
 
-        # Draw the SHAP waterfall plot
-        st.subheader("Risk factor contributions")
+        # For multi-class, we need to specify which class's SHAP values to plot
+        # Create waterfall plot for the specific class
         fig, ax = plt.subplots()
-        shap.plots.waterfall(shap_values[0], show=False)
+        shap.plots.waterfall(shap_values[0, :, class_idx], show=False)
+        plt.title(f'Risk Factor Contributions')
         st.pyplot(fig)
 
-        st.subheader("Factor Ranks")
+        # Remove ax=ax and adjust plot size directly
         fig, ax = plt.subplots()
-        shap.plots.bar(shap_values, max_display=12, ax=ax)
+        shap.plots.beeswarm(test_shap_values[:,:,class_idx], show=False, color="grey", plot_size=None)
+        shap.plots.beeswarm(shap_values[:,:,class_idx], show=False, s=70, color="orange", plot_size=None)
         st.pyplot(fig)
     except Exception as e:
         logging.error(f"Error during prediction: {e}")
