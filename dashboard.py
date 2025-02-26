@@ -38,6 +38,9 @@ anthropic_api_key = st.secrets["ANTHROPIC_API_KEY"]
 # Load the AI doctor system prompt from a text file
 with open("ai_doctor_system_prompt.txt", "r") as file:
     ai_doctor_system_prompt = file.read()
+with open("best_model_card.txt", "r") as file:
+    best_model_card = file.read()
+    ai_doctor_system_prompt += "\n\n" + best_model_card
 
 st.title("Heart Disease Risk Diagnosis Dashboard")
 
